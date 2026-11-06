@@ -3,3 +3,4 @@ public class HelloWorld {
         System.out.println("Hello from Jenkins Maven CI!");
     }
 }
+// VLE6 automatic CI trigger test
