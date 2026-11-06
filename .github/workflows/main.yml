@@ -1,0 +1,41 @@
+name: VLE5 DevOps CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          tags: ghcr.io/parthag345/devops-virtual-lab:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: [self-hosted, Linux, X64, vle5]
+    steps:
+      - name: Deploy to Kubernetes
+        run: |
+          sudo kubectl set image deployment/devops-web \
+            devops-web=ghcr.io/parthag345/devops-virtual-lab:latest
+          sudo kubectl rollout status deployment/devops-web
